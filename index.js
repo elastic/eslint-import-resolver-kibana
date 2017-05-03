@@ -7,48 +7,80 @@ const defaults = {
   kibanaPath: '../kibana',
 };
 
-function getKibanaPath(config, file) {
+function getKibanaPath(config, file, rootPath) {
   if (config != null && config.kibanaPath) {
     return config.kibanaPath;
   }
 
-  const rootPath = findRoot(file);
   return path.resolve(rootPath, defaults.kibanaPath);
 }
 
 function getGlobPattern(source) {
-  return `./${source}{*(.js),/${source}.js,/index.js}`;
+  if (Array.isArray(source)) {
+    const rootPath = path.join(...source);
+    const filename = source[source.length - 1];
+    return `./${rootPath}{*(.js),/${filename}.js,/index.js}`;
+  } else {
+    return `./${source}{*(.js),/${source}.js,/index.js}`;
+  }
 }
 
-function getFilePath(source, kibanaPath) {
-  const uiImport = source.match(new RegExp('^ui/(.*)'));
+function getFileMatches(baseImport, checkPath) {
+  const globPattern = getGlobPattern(baseImport);
+  const globOptions = {
+    cwd: path.resolve(checkPath),
+  };
 
-  if (uiImport !== null) {
-    debug(`import is a ui/ import:`, source);
-    const baseImport = uiImport[1];
-    const checkPath = path.join(kibanaPath, 'src', 'ui', 'public');
-    const globPattern = getGlobPattern(uiImport[1]);
-    const globOptions = {
-      cwd: path.resolve(checkPath),
+  const matches = glob.sync(globPattern, globOptions);
+  debug(`checking in ${checkPath}, matched ${matches.length}`);
+
+  return matches;
+}
+
+function getMatch(matches, checkPath) {
+  if (Array.isArray(matches) && matches.length >= 1) {
+    const matchPath = path.resolve(checkPath, matches[matches.length - 1]);
+    debug(`matched path: ${matchPath}`);
+    return {
+      found: true,
+      path: matchPath,
     };
-
-    const matches = glob.sync(globPattern, globOptions);
-    debug(`checking in ${globOptions.cwd}, matched ${matches.length}`);
-
-    if (matches.length >= 1) {
-      debug(matches);
-      return {
-        found: true,
-        path: path.resolve(globOptions.cwd, matches[matches.length - 1]),
-      }
-    }
   }
+
   return { found: false };
+}
+
+function resolveUiImport(uiImport, kibanaPath) {
+  const baseImport = uiImport[1];
+  debug(`resolving ui import: ui/${baseImport}`);
+  const checkPath = path.join(kibanaPath, 'src', 'ui', 'public');
+  const matches = getFileMatches(baseImport, checkPath);
+  return getMatch(matches, checkPath);
+}
+
+function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
+  const { name: packageName } = require(path.resolve(rootPath, 'package.json'));
+  const [ pluginName, ...importPaths ] = pluginsImport[1].split('/');
+  debug(`resolving plugins import: plugins/${pluginName}/${importPaths.join('/')}`);
+
+  if (packageName === pluginName) {
+    const checkPath = path.join(rootPath, 'public');
+    const matches = getFileMatches(importPaths, checkPath);
+    return getMatch(matches, checkPath);
+  }
+
+  return getMatch();
 }
 
 exports.interfaceVersion = 2
 
 exports.resolve = function resolveKibanaPath(source, file, config) {
-  const kibanaPath = getKibanaPath(config, file);
-  return getFilePath(source, kibanaPath);
+  const uiImport = source.match(new RegExp('^ui/(.*)'));
+  const pluginsImport = source.match(new RegExp('^plugins/(.*)'));
+  const rootPath = findRoot(file);
+  const kibanaPath = getKibanaPath(config, file, rootPath);
+
+  if (uiImport !== null) return resolveUiImport(uiImport, kibanaPath)
+  if (pluginsImport !== null) return resolvePluginsImport(pluginsImport, kibanaPath, rootPath);
+  return getMatch();
 };
