@@ -67,6 +67,10 @@ function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
     const checkPath = path.join(rootPath, 'public');
     const matches = getFileMatches(importPaths, checkPath);
     return getMatch(matches, checkPath);
+  } else {
+    const checkPath = path.join(kibanaPath, 'src', 'core_plugins', pluginName, 'public');
+    const matches = getFileMatches(importPaths, checkPath);
+    return getMatch(matches, checkPath);
   }
 
   return getMatch();
