@@ -23,19 +23,13 @@ function getGlobPattern(source) {
 function getFilePath(source, kibanaPath) {
   const uiImport = source.match(new RegExp('^ui/(.*)'));
 
-  let baseImport;
-  let checkPath;
-
   if (uiImport !== null) {
     debug(`import is a ui/ import:`, source);
-    baseImport = uiImport[1];
-    checkPath = path.join('src', 'ui', 'public');
-  }
-
-  if (baseImport != null && checkPath != null) {
-    const globPattern = getGlobPattern(baseImport);
+    const baseImport = uiImport[1];
+    const checkPath = path.join(kibanaPath, 'src', 'ui', 'public');
+    const globPattern = getGlobPattern(uiImport[1]);
     const globOptions = {
-      cwd: path.resolve(kibanaPath, 'src', 'ui', 'public'),
+      cwd: path.resolve(checkPath),
     };
 
     const matches = glob.sync(globPattern, globOptions);
@@ -48,9 +42,7 @@ function getFilePath(source, kibanaPath) {
         path: path.resolve(globOptions.cwd, matches[matches.length - 1]),
       }
     }
-    return { found: false };
   }
-
   return { found: false };
 }
 
