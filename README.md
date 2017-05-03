@@ -10,8 +10,12 @@ In your `.eslintrc.(yml|json|js)` file, add the following `import/resolver` unde
 # .eslintrc.yml
 settings:
   # uses 'eslint-import-resolver-kibana':
-  import/resolver: kibana
+  import/resolver:
+    - node
+    - kibana
 ```
+
+The `node` resolver isn't strictly required, but the resolving rules are unlikely to work as you expect if you don't include it in the list of resolvers. It's only included by default if you don't specify other resolvers.
 
 The resolved assumed that the Kibana path exists at the same level as your plugin. If your Kibana path is somewhere else, you can specify it in the resolver settings, like so:
 
