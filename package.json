@@ -5,6 +5,10 @@
   "main": "index.js",
   "author": "Joe Fleming <github.com/w33ble>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elastic/eslint-import-resolver-kibana.git"
+  },
   "dependencies": {
     "debug": "^2.6.6",
     "find-root": "^1.0.0",
