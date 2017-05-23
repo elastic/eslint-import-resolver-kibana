@@ -12,7 +12,10 @@ function getKibanaPath(config, file, rootPath) {
     return config.kibanaPath;
   }
 
-  return path.resolve(rootPath, defaults.kibanaPath);
+  const kibanaPath = path.resolve(rootPath, defaults.kibanaPath);
+  debug(`resolved kibana path: ${kibanaPath}`);
+
+  return kibanaPath;
 }
 
 function getGlobPattern(source) {
