@@ -9,7 +9,7 @@ const defaults = {
 
 function getKibanaPath(config, file, rootPath) {
   if (config != null && config.kibanaPath) {
-    return config.kibanaPath;
+    return path.resolve(config.kibanaPath);
   }
 
   const kibanaPath = path.resolve(rootPath, defaults.kibanaPath);
