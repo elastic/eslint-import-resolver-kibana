@@ -79,6 +79,24 @@ function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
   return getMatch();
 }
 
+function resolveWebpackShim(source, kibanaPath, rootPath) {
+  const pluginShimPath = path.join(rootPath, 'webpackShims');
+  const pluginMatches = getFileMatches(source, pluginShimPath);
+  const pluginFileMatches = getMatch(pluginMatches, pluginShimPath);
+  if (pluginFileMatches.found) {
+    debug(`resolved webpackShim import in plugin: ${source}`);
+    return pluginFileMatches;
+  }
+
+  const kibanaShimPath = path.join(kibanaPath, 'webpackShims');
+  const kibanaMatches = getFileMatches(source, kibanaShimPath);
+  const kibanaFileMatches = getMatch(kibanaMatches, kibanaShimPath);
+  if (kibanaFileMatches.found) {
+    debug(`resolved webpackShim import in Kibana: ${source}`);
+  }
+  return kibanaFileMatches;
+}
+
 exports.interfaceVersion = 2
 
 exports.resolve = function resolveKibanaPath(source, file, config) {
@@ -89,5 +107,5 @@ exports.resolve = function resolveKibanaPath(source, file, config) {
 
   if (uiImport !== null) return resolveUiImport(uiImport, kibanaPath)
   if (pluginsImport !== null) return resolvePluginsImport(pluginsImport, kibanaPath, rootPath);
-  return getMatch();
+  return resolveWebpackShim(source, kibanaPath, rootPath);
 };
