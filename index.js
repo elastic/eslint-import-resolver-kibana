@@ -7,9 +7,12 @@ const defaults = {
   kibanaPath: '../kibana',
 };
 
+/*
+ * Resolves the path to Kibana, either from default setting or config
+ */
 function getKibanaPath(config, file, rootPath) {
   if (config != null && config.kibanaPath) {
-    return config.kibanaPath;
+    return path.resolve(config.kibanaPath);
   }
 
   const kibanaPath = path.resolve(rootPath, defaults.kibanaPath);
@@ -18,6 +21,14 @@ function getKibanaPath(config, file, rootPath) {
   return kibanaPath;
 }
 
+/*
+ * Creates a glob pattern string that looks for:
+ *  - file that matches the source (source.js)
+ *  - directory with an index.js that matches the source (source/index.js)
+ *  - directory with a matching module name that matches the source (source/source.js)
+ * NOTE: last condition mentioned above can be removed when the custom resolver is removed from Kibana webpack config
+ * @param {String|Array} source: the module identifier (./imported-file).
+ */
 function getGlobPattern(source) {
   if (Array.isArray(source)) {
     const rootPath = path.join(...source);
@@ -28,8 +39,12 @@ function getGlobPattern(source) {
   }
 }
 
-function getFileMatches(baseImport, checkPath) {
-  const globPattern = getGlobPattern(baseImport);
+/*
+ * Returns an array of relative file path strings that match the source
+ * @param {String} source: the module identifier
+ */
+function getFileMatches(source, checkPath) {
+  const globPattern = getGlobPattern(source);
   const globOptions = {
     cwd: path.resolve(checkPath),
   };
@@ -40,6 +55,12 @@ function getFileMatches(baseImport, checkPath) {
   return matches;
 }
 
+/*
+ * Return an object with a found property of `true` or `false`
+ * If found, returns a `path` property of the matched file
+ * @param {Array} matches: relative paths to check
+ * @param {String} checkPath: prefix for the path
+ */
 function getMatch(matches, checkPath) {
   if (Array.isArray(matches) && matches.length >= 1) {
     const matchPath = path.resolve(checkPath, matches[matches.length - 1]);
@@ -53,6 +74,9 @@ function getMatch(matches, checkPath) {
   return { found: false };
 }
 
+/*
+ * Resolves imports in Kibana that begin with `ui/`
+ */
 function resolveUiImport(uiImport, kibanaPath) {
   const baseImport = uiImport[1];
   debug(`resolving ui import: ui/${baseImport}`);
@@ -61,6 +85,11 @@ function resolveUiImport(uiImport, kibanaPath) {
   return getMatch(matches, checkPath);
 }
 
+/*
+ * Resolves imports in local plugin that begin with `plugin/`
+ * NOTE: this does not resolve across different plugins
+ * NOTE: when webpack aliases are removed from Kibana, this will no longer be needed.
+ */
 function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
   const { name: packageName } = require(path.resolve(rootPath, 'package.json'));
   const [ pluginName, ...importPaths ] = pluginsImport[1].split('/');
@@ -79,8 +108,36 @@ function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
   return getMatch();
 }
 
+/*
+ * Attempts to resolve imports as webpackShims, either in Kibana or in the local plugin
+ */
+function resolveWebpackShim(source, kibanaPath, rootPath) {
+  const pluginShimPath = path.join(rootPath, 'webpackShims');
+  const pluginMatches = getFileMatches(source, pluginShimPath);
+  const pluginFileMatches = getMatch(pluginMatches, pluginShimPath);
+  if (pluginFileMatches.found) {
+    debug(`resolved webpackShim import in plugin: ${source}`);
+    return pluginFileMatches;
+  }
+
+  const kibanaShimPath = path.join(kibanaPath, 'webpackShims');
+  const kibanaMatches = getFileMatches(source, kibanaShimPath);
+  const kibanaFileMatches = getMatch(kibanaMatches, kibanaShimPath);
+  if (kibanaFileMatches.found) {
+    debug(`resolved webpackShim import in Kibana: ${source}`);
+  }
+  return kibanaFileMatches;
+}
+
 exports.interfaceVersion = 2
 
+/*
+ * See
+ * https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#resolvesource-file-config---found-boolean-path-string-
+ * @param {String} source: the module identifier (./imported-file).
+ * @param {String} file: the absolute path to the file making the import (/some/path/to/module.js)
+ * @param {Object} config: an object provided via the import/resolver setting.
+ */
 exports.resolve = function resolveKibanaPath(source, file, config) {
   const uiImport = source.match(new RegExp('^ui/(.*)'));
   const pluginsImport = source.match(new RegExp('^plugins/(.*)'));
@@ -89,5 +146,5 @@ exports.resolve = function resolveKibanaPath(source, file, config) {
 
   if (uiImport !== null) return resolveUiImport(uiImport, kibanaPath)
   if (pluginsImport !== null) return resolvePluginsImport(pluginsImport, kibanaPath, rootPath);
-  return getMatch();
+  return resolveWebpackShim(source, kibanaPath, rootPath);
 };
