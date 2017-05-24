@@ -110,6 +110,19 @@ function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
 }
 
 /*
+ * Resolves imports where source is a directory with relative path and has a source file with the same name
+ * @param {Array} fileImport: source of relative
+ * @param {String} file: absolute path to the file making the import
+ * @param {String} rootPath: root path of the project code
+ */
+function resolveLocalRelativeImport(fileImport, file, rootPath) {
+  const sourceBase = path.basename(fileImport, '.js');
+  const localPath = path.dirname(path.resolve(path.dirname(file), sourceBase));
+  const matches = getFileMatches(sourceBase, localPath);
+  return getMatch(matches, localPath);
+}
+
+/*
  * Attempts to resolve imports as webpackShims, either in Kibana or in the local plugin
  * @param {String} source: the module identifier
  * @param {String} kibanaPath: path to Kibana, default or configured
@@ -145,10 +158,12 @@ exports.interfaceVersion = 2
 exports.resolve = function resolveKibanaPath(source, file, config) {
   const uiImport = source.match(new RegExp('^ui/(.*)'));
   const pluginsImport = source.match(new RegExp('^plugins/(.*)'));
+  const relativeImport = source.match(new RegExp('^\.\.?/(.*)'));
   const rootPath = findRoot(file);
   const kibanaPath = getKibanaPath(config, file, rootPath);
 
   if (uiImport !== null) return resolveUiImport(uiImport, kibanaPath)
   if (pluginsImport !== null) return resolvePluginsImport(pluginsImport, kibanaPath, rootPath);
+  if (relativeImport !== null) return resolveLocalRelativeImport(relativeImport[1], file, rootPath);
   return resolveWebpackShim(source, kibanaPath, rootPath);
 };
