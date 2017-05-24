@@ -13,5 +13,8 @@
     "debug": "^2.6.6",
     "find-root": "^1.0.0",
     "glob": "^7.1.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.19.0"
   }
 }
