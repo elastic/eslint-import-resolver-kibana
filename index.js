@@ -105,8 +105,6 @@ function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
     const matches = getFileMatches(importPaths, checkPath);
     return getMatch(matches, checkPath);
   }
-
-  return getMatch();
 }
 
 /*
@@ -115,7 +113,7 @@ function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
  * @param {String} file: absolute path to the file making the import
  * @param {String} rootPath: root path of the project code
  */
-function resolveLocalRelativeImport(fileImport, file, rootPath) {
+function resolveLocalRelativeImport(fileImport, file) {
   const sourceBase = path.basename(fileImport, '.js');
   const localPath = path.dirname(path.resolve(path.dirname(file), sourceBase));
   const matches = getFileMatches(sourceBase, localPath);
@@ -146,7 +144,7 @@ function resolveWebpackShim(source, kibanaPath, rootPath) {
   return kibanaFileMatches;
 }
 
-exports.interfaceVersion = 2
+exports.interfaceVersion = 2;
 
 /*
  * See
