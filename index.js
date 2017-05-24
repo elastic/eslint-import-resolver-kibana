@@ -138,16 +138,25 @@ function resolveWebpackShim(source, kibanaPath, rootPath) {
  * Used for UI: https://github.com/elastic/kibana/blob/5c04ff65fbb3b16f8958f8241488463136415670/src/ui/ui_bundler_env.js#L29
  * Used for tests: https://github.com/elastic/kibana/blob/5c04ff65fbb3b16f8958f8241488463136415670/src/core_plugins/tests_bundle/index.js#L70-L75
  */
-function resolveAliasModuleImport(baseImport, kibanaPath) {
-  debug(`resolving ui import: src/core_plugins/dev_mode/public/${baseImport}`);
+function resolveAliasModuleImport(source, kibanaPath) {
+  debug(`resolving ui import: src/core_plugins/dev_mode/public/${source}`);
   const checkPaths = [
+    path.join(kibanaPath), // ui_framework/components
     path.join(kibanaPath, 'src', 'core_plugins', 'dev_mode', 'public'), // ng_mock
+    path.join(kibanaPath, 'src', 'fixtures'),
+    path.join(kibanaPath, 'src', 'test_harness', 'public'),
+    path.join(kibanaPath, 'src', 'test_utils', 'public'),
+    path.join(kibanaPath, 'src', 'ui', 'public'), // ui/something
   ];
 
+  // clean the source
+  // strip off leading `ui/` if its there
+  const baseSource = source.replace(/^ui\//, '');
   let resolved = { found: false };
   checkPaths.forEach(function (checkPath) {
     if (!resolved.found) {
-      const matches = getFileMatches(baseImport, checkPath);
+      debug(`resolving alias module import: ${source} / interpreted as ${baseSource}`);
+      const matches = getFileMatches(baseSource, checkPath);
       const match = getMatch(matches, checkPath);
       if (match.found) {
         resolved = match;
