@@ -191,7 +191,7 @@ exports.resolve = function resolveKibanaPath(source, file, config) {
 
   const relativeImport = source.match(new RegExp('^\.\.?/(.*)'));
   if (relativeImport !== null) {
-    return resolveLocalRelativeImport(relativeImport[1], file, rootPath);
+    return resolveLocalRelativeImport(relativeImport[1], file);
   }
   return resolveWebpackShim(source, kibanaPath, rootPath);
 };
