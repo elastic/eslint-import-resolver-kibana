@@ -42,6 +42,7 @@ function getGlobPattern(source) {
 /*
  * Returns an array of relative file path strings that match the source
  * @param {String} source: the module identifier
+ * @param {String} checkPath: path to search in for file globbing
  */
 function getFileMatches(source, checkPath) {
   const globPattern = getGlobPattern(source);
@@ -110,6 +111,9 @@ function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
 
 /*
  * Attempts to resolve imports as webpackShims, either in Kibana or in the local plugin
+ * @param {String} source: the module identifier
+ * @param {String} kibanaPath: path to Kibana, default or configured
+ * @param {String} rootPath: root path of the project code
  */
 function resolveWebpackShim(source, kibanaPath, rootPath) {
   const pluginShimPath = path.join(rootPath, 'webpackShims');
