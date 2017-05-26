@@ -169,6 +169,14 @@ function resolveKibanaModuleImport(source, kibanaPath) {
   return resolved;
 }
 
+function stripPath(strip, result) {
+  if (!result.found || !strip) return result;
+  return {
+    found: result.found,
+    path: null,
+  };
+}
+
 /*
  * See
  * https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#resolvesource-file-config---found-boolean-path-string-
@@ -180,25 +188,24 @@ exports.resolve = function resolveKibanaPath(source, file, config) {
   const rootPath = findRoot(file);
   const kibanaPath = getKibanaPath(config, file, rootPath);
 
+  const loaderPrefix = source.match(/\!*(raw|file.+)\!+(.*)/);
+  const loaderPrefixed = (loaderPrefix !== null);
+  const realSource = (loaderPrefixed) ? loaderPrefix[2] : source;
+  const pathFix = (result) => stripPath(loaderPrefixed, result);
+
   // check relative paths
-  const relativeImport = source.match(new RegExp('^\\.\\.?/(.*)'));
-  if (relativeImport !== null) {
-    return resolveLocalRelativeImport(source, file);
-  }
+  const relativeImport = Boolean(realSource.match(new RegExp('^\\.\\.?/(.*)')));
+  if (relativeImport) return pathFix(resolveLocalRelativeImport(realSource, file));
 
-  // check local plugins path
-  const pluginsImport = source.match(new RegExp('^plugins/(.*)'));
-  if (pluginsImport !== null) {
-    return resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath);
-  }
+  // check local plugins path (resolves kibana webpack alias)
+  const pluginsImport = realSource.match(new RegExp('^plugins/(.*)'));
+  if (pluginsImport !== null) return pathFix(resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath));
 
-  // check for matches in kibana
-  const aliasModuleImport = resolveKibanaModuleImport(source, kibanaPath);
-  if (aliasModuleImport.found) {
-    return aliasModuleImport;
-  }
+  // check for matches in kibana (using kibana webpack aliases)
+  const aliasModuleImport = pathFix(resolveKibanaModuleImport(realSource, kibanaPath));
+  if (aliasModuleImport.found) return aliasModuleImport;
 
-  return resolveWebpackShim(source, kibanaPath, rootPath);
+  return resolveWebpackShim(realSource, kibanaPath, rootPath);
 };
 
 // use version 2 of the resolver interface, https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#interfaceversion--number
