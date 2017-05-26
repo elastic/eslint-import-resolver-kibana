@@ -11,13 +11,13 @@ const defaults = {
  * Resolves the path to Kibana, either from default setting or config
  */
 function getKibanaPath(config, file, rootPath) {
-  if (config != null && config.kibanaPath) {
-    return path.resolve(config.kibanaPath);
-  }
+  const inConfig = config != null && config.kibanaPath;
 
-  const kibanaPath = path.resolve(rootPath, defaults.kibanaPath);
+  const kibanaPath = (inConfig)
+    ? path.resolve(config.kibanaPath)
+    : path.resolve(rootPath, defaults.kibanaPath);
+
   debug(`resolved kibana path: ${kibanaPath}`);
-
   return kibanaPath;
 }
 
