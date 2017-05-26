@@ -181,7 +181,7 @@ exports.resolve = function resolveKibanaPath(source, file, config) {
   const kibanaPath = getKibanaPath(config, file, rootPath);
 
   // check relative paths
-  const relativeImport = source.match(new RegExp('^\.\.?/(.*)'));
+  const relativeImport = source.match(new RegExp('^\\.\\.?/(.*)'));
   if (relativeImport !== null) {
     return resolveLocalRelativeImport(source, file);
   }
