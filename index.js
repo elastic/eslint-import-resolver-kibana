@@ -80,7 +80,7 @@ function getMatch(matches, checkPath) {
  * NOTE: this does not resolve across different plugins
  * NOTE: when webpack aliases are removed from Kibana, this will no longer be needed.
  */
-function resolvePluginsImport(pluginsImport, kibanaPath, rootPath) {
+function resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath) {
   const { name: packageName } = require(path.resolve(rootPath, 'package.json'));
   const [ pluginName, ...importPaths ] = pluginsImport[1].split('/');
   debug(`resolving plugins import: plugins/${pluginName}/${importPaths.join('/')}`);
@@ -119,6 +119,7 @@ function resolveWebpackShim(source, kibanaPath, rootPath) {
   const pluginShimPath = path.join(rootPath, 'webpackShims');
   const pluginMatches = getFileMatches(source, pluginShimPath);
   const pluginFileMatches = getMatch(pluginMatches, pluginShimPath);
+  debug(`resolveWebpackShim: checking for ${source}`);
   if (pluginFileMatches.found) {
     debug(`resolved webpackShim import in plugin: ${source}`);
     return pluginFileMatches;
@@ -138,8 +139,8 @@ function resolveWebpackShim(source, kibanaPath, rootPath) {
  * Used for UI: https://github.com/elastic/kibana/blob/5c04ff65fbb3b16f8958f8241488463136415670/src/ui/ui_bundler_env.js#L29
  * Used for tests: https://github.com/elastic/kibana/blob/5c04ff65fbb3b16f8958f8241488463136415670/src/core_plugins/tests_bundle/index.js#L70-L75
  */
-function resolveAliasModuleImport(source, kibanaPath) {
-  debug(`resolving ui import: src/core_plugins/dev_mode/public/${source}`);
+function resolveKibanaModuleImport(source, kibanaPath) {
+  debug(`resolveKibanaModuleImport: checking ${kibanaPath} for ${source}`);
   const checkPaths = [
     path.join(kibanaPath), // ui_framework/components
     path.join(kibanaPath, 'src', 'core_plugins', 'dev_mode', 'public'), // ng_mock
@@ -155,18 +156,17 @@ function resolveAliasModuleImport(source, kibanaPath) {
   let resolved = { found: false };
   checkPaths.forEach(function (checkPath) {
     if (!resolved.found) {
-      debug(`resolving alias module import: ${source} / interpreted as ${baseSource}`);
+      debug(`resolveKibanaModuleImport: check for ${baseSource} in ${checkPath}`);
       const matches = getFileMatches(baseSource, checkPath);
       const match = getMatch(matches, checkPath);
       if (match.found) {
+        debug(`resolving ui import ${source} as ${match.path}`);
         resolved = match;
       }
     }
   });
   return resolved;
 }
-
-exports.interfaceVersion = 2;
 
 /*
  * See
@@ -179,19 +179,26 @@ exports.resolve = function resolveKibanaPath(source, file, config) {
   const rootPath = findRoot(file);
   const kibanaPath = getKibanaPath(config, file, rootPath);
 
-  const aliasModuleImport = resolveAliasModuleImport(source, kibanaPath);
+  // check relative paths
+  const relativeImport = source.match(new RegExp('^\.\.?/(.*)'));
+  if (relativeImport !== null) {
+    return resolveLocalRelativeImport(source, file);
+  }
+
+  // check local plugins path
+  const pluginsImport = source.match(new RegExp('^plugins/(.*)'));
+  if (pluginsImport !== null) {
+    return resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath);
+  }
+
+  // check for matches in kibana
+  const aliasModuleImport = resolveKibanaModuleImport(source, kibanaPath);
   if (aliasModuleImport.found) {
     return aliasModuleImport;
   }
 
-  const pluginsImport = source.match(new RegExp('^plugins/(.*)'));
-  if (pluginsImport !== null) {
-    return resolvePluginsImport(pluginsImport, kibanaPath, rootPath);
-  }
-
-  const relativeImport = source.match(new RegExp('^\.\.?/(.*)'));
-  if (relativeImport !== null) {
-    return resolveLocalRelativeImport(relativeImport[1], file);
-  }
   return resolveWebpackShim(source, kibanaPath, rootPath);
 };
+
+// use version 2 of the resolver interface, https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#interfaceversion--number
+exports.interfaceVersion = 2;
