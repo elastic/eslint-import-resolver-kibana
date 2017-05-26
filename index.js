@@ -169,6 +169,14 @@ function resolveKibanaModuleImport(source, kibanaPath) {
   return resolved;
 }
 
+function stripPath(strip, result) {
+  if (!result.found || !strip) return result;
+  return {
+    found: result.found,
+    path: null,
+  };
+}
+
 /*
  * See
  * https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#resolvesource-file-config---found-boolean-path-string-
@@ -183,19 +191,18 @@ exports.resolve = function resolveKibanaPath(source, file, config) {
   const loaderPrefix = source.match(/\!*(raw|file.+)\!+(.*)/);
   const loaderPrefixed = (loaderPrefix !== null);
   const realSource = (loaderPrefixed) ? loaderPrefix[2] : source;
+  const pathFix = (result) => stripPath(loaderPrefixed, result);
 
   // check relative paths
   const relativeImport = Boolean(realSource.match(new RegExp('^\\.\\.?/(.*)')));
-  if (relativeImport) return resolveLocalRelativeImport(realSource, file);
+  if (relativeImport) return pathFix(resolveLocalRelativeImport(realSource, file));
 
   // check local plugins path (resolves kibana webpack alias)
   const pluginsImport = realSource.match(new RegExp('^plugins/(.*)'));
-  if (pluginsImport !== null) {
-    return resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath);
-  }
+  if (pluginsImport !== null) return pathFix(resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath));
 
   // check for matches in kibana (using kibana webpack aliases)
-  const aliasModuleImport = resolveKibanaModuleImport(realSource, kibanaPath);
+  const aliasModuleImport = pathFix(resolveKibanaModuleImport(realSource, kibanaPath));
   if (aliasModuleImport.found) return aliasModuleImport;
 
   return resolveWebpackShim(realSource, kibanaPath, rootPath);
