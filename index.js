@@ -103,8 +103,9 @@ function resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath) {
  * @param {String} rootPath: root path of the project code
  */
 function resolveLocalRelativeImport(fileImport, file) {
-  const sourceBase = path.basename(fileImport, '.js');
-  const localPath = path.dirname(path.resolve(path.dirname(file), sourceBase));
+  const sourceBase = path.basename(fileImport);
+  const localPath = path.dirname(path.resolve(path.dirname(file), fileImport));
+  debug(`resolving relative path: ${localPath}`);
   const matches = getFileMatches(sourceBase, localPath);
   return getMatch(matches, localPath);
 }
