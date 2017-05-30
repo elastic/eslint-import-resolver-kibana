@@ -145,9 +145,9 @@ function resolveKibanaModuleImport(source, kibanaPath) {
   const checkPaths = [
     path.join(kibanaPath), // ui_framework/components
     path.join(kibanaPath, 'src', 'core_plugins', 'dev_mode', 'public'), // ng_mock
-    path.join(kibanaPath, 'src', 'fixtures'),
-    path.join(kibanaPath, 'src', 'test_harness', 'public'),
-    path.join(kibanaPath, 'src', 'test_utils', 'public'),
+    path.join(kibanaPath, 'src', 'fixtures'), // fixtures/something
+    path.join(kibanaPath, 'src', 'test_harness', 'public'), // test_harness/something
+    path.join(kibanaPath, 'src', 'test_utils', 'public'), // test_utils/something
     path.join(kibanaPath, 'src', 'ui', 'public'), // ui/something
   ];
 
