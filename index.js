@@ -83,13 +83,15 @@ function getMatch(matches, checkPath) {
 function resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath) {
   const { name: packageName } = require(path.resolve(rootPath, 'package.json'));
   const [ pluginName, ...importPaths ] = pluginsImport[1].split('/');
-  debug(`resolving plugins import: plugins/${pluginName}/${importPaths.join('/')}`);
+  debug(`resolvePluginsAliasImport: package ${packageName}, plugin ${pluginName}, import ${importPaths.join('/')}`);
 
-  if (packageName === pluginName) {
+  if (packageName !== 'kibana' && packageName === pluginName) {
+    // resolve local plugin path
     const checkPath = path.join(rootPath, 'public');
     const matches = getFileMatches(importPaths, checkPath);
     return getMatch(matches, checkPath);
   } else {
+    // resolve kibana core plugin path
     const checkPath = path.join(kibanaPath, 'src', 'core_plugins', pluginName, 'public');
     const matches = getFileMatches(importPaths, checkPath);
     return getMatch(matches, checkPath);
