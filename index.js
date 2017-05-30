@@ -152,8 +152,8 @@ function resolveKibanaModuleImport(source, kibanaPath) {
   ];
 
   // clean the source
-  // strip off leading `ui/` if its there
-  const baseSource = source.replace(/^ui\//, '');
+  // strip off leading prefix, if its there (ui, fixtures, test_utils, test_harness)
+  const baseSource = source.replace(/^(ui|fixtures|test_utils|test_harness)\//, '');
   let resolved = { found: false };
   checkPaths.forEach(function (checkPath) {
     if (!resolved.found) {
