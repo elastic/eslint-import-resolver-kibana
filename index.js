@@ -82,7 +82,7 @@ function getMatch(matches, checkPath) {
  */
 function resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath) {
   const { name: packageName } = require(path.resolve(rootPath, 'package.json'));
-  const [ pluginName, ...importPaths ] = pluginsImport[1].split('/');
+  const [ pluginName, ...importPaths ] = pluginsImport[1].split(path.sep);
   debug(`resolvePluginsAliasImport: package ${packageName}, plugin ${pluginName}, import ${importPaths.join('/')}`);
 
   if (packageName !== 'kibana' && packageName === pluginName) {
@@ -120,7 +120,7 @@ function resolveLocalRelativeImport(fileImport, file) {
  */
 function resolveWebpackShim(source, kibanaPath, rootPath) {
   debug(`resolveWebpackShim: resolving ${source}`);
-  const sourceParts = source.split('/');
+  const sourceParts = source.split(path.sep);
   const baseSource = sourceParts.pop();
 
   const pluginShimPaths = [
