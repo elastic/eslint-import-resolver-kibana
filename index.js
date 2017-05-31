@@ -49,11 +49,11 @@ function getPlugins(config, projectRoot) {
 
 function getWebpackConfig(source, projectRoot, config) {
   const kibanaPath = getKibanaPath(config, projectRoot);
-  const fromRoot = (...path) => resolve(kibanaPath, ...path);
+  const fromKibana = (...path) => resolve(kibanaPath, ...path);
     
   const aliases = {
-    ui: fromRoot('src/ui/public'),
-    test_harness: fromRoot('src/test_harness/public'),
+    ui: fromKibana('src/ui/public'),
+    test_harness: fromKibana('src/test_harness/public'),
     querystring: 'querystring-browser',
   };
   
@@ -73,11 +73,11 @@ function getWebpackConfig(source, projectRoot, config) {
       postfixes: [''],
       modulesDirectories: ['webpackShims', 'node_modules'],
       fallback: [
-        fromRoot('webpackShims'),
-        fromRoot('node_modules')
+        fromKibana('webpackShims'),
+        fromKibana('node_modules')
       ],
       loaderPostfixes: ['-loader', ''],
-      root: fromRoot('.'),
+      root: fromKibana('.'),
       alias: aliases,
       unsafeCache: true,
     },
