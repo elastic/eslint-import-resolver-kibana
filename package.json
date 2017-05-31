@@ -1,5 +1,5 @@
 {
-  "name": "eslint-import-resolver-kibana",
+  "name": "@elastic/eslint-import-resolver-kibana",
   "version": "0.4.0",
   "description": "Kibana eslint-plugin-import resolver for Kibana",
   "main": "index.js",
