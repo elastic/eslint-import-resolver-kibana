@@ -118,16 +118,24 @@ function resolveLocalRelativeImport(fileImport, file) {
  * @param {String} kibanaPath: path to Kibana, default or configured
  * @param {String} rootPath: root path of the project code
  */
-function resolveWebpackShim(source, kibanaPath, rootPath) {
+function resolveWebpackShim(source, file, kibanaPath, rootPath) {
   debug(`resolveWebpackShim: resolving ${source}`);
   const sourceParts = source.split(path.sep);
   const baseSource = sourceParts.pop();
+  const pathTree = path.relative(rootPath, path.dirname(file)).split(path.sep);
 
-  const pluginShimPaths = [
-    path.join(rootPath, 'webpackShims', ...sourceParts),
-    path.join(rootPath, 'public', 'webpackShims', ...sourceParts),
-    path.join(kibanaPath, 'webpackShims', ...sourceParts),
-  ];
+  // check all paths from root to filedir for matching webpackShims path
+  const pluginShimPaths = pathTree.reduce((acc, branch) => {
+    acc.filepath.push(branch);
+    acc.paths.push(path.join(rootPath, ...acc.filepath, 'webpackShims', ...sourceParts));
+    return acc;
+  }, {
+    filepath: [],
+    paths: [ path.join(rootPath, 'webpackShims', ...sourceParts) ]
+  }).paths;
+
+  // add kibana webpackShims to the list of paths to try
+  pluginShimPaths.push(path.join(kibanaPath, 'webpackShims', ...sourceParts));
 
   const pluginFileMatches = pluginShimPaths.reduce((acc, pluginShimPath) => {
     if (acc.found) return acc; // stop checking once there's a match
@@ -210,7 +218,7 @@ exports.resolve = function resolveKibanaPath(source, file, config) {
   const aliasModuleImport = pathFix(resolveKibanaModuleImport(realSource, kibanaPath));
   if (aliasModuleImport.found) return aliasModuleImport;
 
-  return resolveWebpackShim(realSource, kibanaPath, rootPath);
+  return resolveWebpackShim(realSource, file, kibanaPath, rootPath);
 };
 
 // use version 2 of the resolver interface, https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#interfaceversion--number
