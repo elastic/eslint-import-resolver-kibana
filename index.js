@@ -119,22 +119,25 @@ function resolveLocalRelativeImport(fileImport, file) {
  * @param {String} rootPath: root path of the project code
  */
 function resolveWebpackShim(source, kibanaPath, rootPath) {
-  const pluginShimPath = path.join(rootPath, 'webpackShims');
-  const pluginMatches = getFileMatches(source, pluginShimPath);
-  const pluginFileMatches = getMatch(pluginMatches, pluginShimPath);
-  debug(`resolveWebpackShim: checking for ${source}`);
-  if (pluginFileMatches.found) {
-    debug(`resolved webpackShim import in plugin: ${source}`);
-    return pluginFileMatches;
-  }
+  debug(`resolveWebpackShim: resolving ${source}`);
+  const sourceParts = source.split('/');
+  const baseSource = sourceParts.pop();
 
-  const kibanaShimPath = path.join(kibanaPath, 'webpackShims');
-  const kibanaMatches = getFileMatches(source, kibanaShimPath);
-  const kibanaFileMatches = getMatch(kibanaMatches, kibanaShimPath);
-  if (kibanaFileMatches.found) {
-    debug(`resolved webpackShim import in Kibana: ${source}`);
-  }
-  return kibanaFileMatches;
+  const pluginShimPaths = [
+    path.join(rootPath, 'webpackShims', ...sourceParts),
+    path.join(rootPath, 'public', 'webpackShims', ...sourceParts),
+    path.join(kibanaPath, 'webpackShims', ...sourceParts),
+  ];
+
+  const pluginFileMatches = pluginShimPaths.reduce((acc, pluginShimPath) => {
+    if (acc.found) return acc; // stop checking once there's a match
+
+    const pluginMatches = getFileMatches(baseSource, pluginShimPath);
+    return getMatch(pluginMatches, pluginShimPath);
+  }, {});
+
+  if (pluginFileMatches.found) debug(`resolved webpackShim import in plugin: ${source}`);
+  return pluginFileMatches;
 }
 
 /*
