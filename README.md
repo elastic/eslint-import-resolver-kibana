@@ -27,3 +27,11 @@ settings:
 ```
 
 See [the resolvers docs](https://github.com/benmosher/eslint-plugin-import#resolvers) or the [resolver spec](https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#resolvesource-file-config---found-boolean-path-string-) for more details.
+
+## Configuration
+
+Property | Default | Descritpion
+-------- | ------- | -----------
+kibanaPath | `../kibana` | Relative path to the kibana root
+pluginDirs | `[]` | Array of additional directories to check for Kibana plugins
+pluginPaths | `[]` | Array of additional paths to look in when resolving plugin dependencies
