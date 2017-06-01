@@ -1,4 +1,5 @@
 const { dirname, resolve } = require('path');
+const { readFileSync } = require('fs');
 const pkgUp = require('pkg-up');
 const glob = require('glob-all');
 const webpackResolver = require('eslint-import-resolver-webpack');
@@ -8,8 +9,8 @@ const debug = require('debug')('eslint-import-resolver-kibana');
 
 const defaults = {
   kibanaPath: '../kibana',
-  pluginPaths: [],
   pluginDirs: [],
+  pluginPaths: [],
 };
 
 /*
@@ -27,8 +28,22 @@ function getKibanaPath(config, rootPath) {
 }
 
 function getProjectRoot(file, config) {
-  const pkgFile = pkgUp.sync(dirname(file));
-  return dirname(pkgFile);
+  const { pluginName } = config;
+
+  const getRootPackageDir = (dir) => {
+    const pkgFile = pkgUp.sync(dir);
+    if (pkgFile === null) throw new Error('Failed to find plugin root');
+    if (!pluginName) return dirname(pkgFile);
+
+    // if pluginName is provided, check for match
+    const { name } = JSON.parse(readFileSync(pkgFile));
+    if (name === pluginName) return dirname(pkgFile);
+
+    // recurse until a matching package.json is found
+    return getRootPackageDir(resolve(dirname(pkgFile), '..'));
+  };
+
+  return getRootPackageDir(dirname(file));
 }
 
 function getPlugins(config, kibanaPath, projectRoot) {
@@ -99,18 +114,18 @@ function getWebpackConfig(source, projectRoot, config) {
   };
 }
 
-// use version 2 of the resolver interface, https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#interfaceversion--number
-exports.interfaceVersion = 2;
-
+// cache projectRoot and webpackConfig
 let webpackConfig;
-exports.resolve = function resolveKibanaPath(source, file, config) {
-  const projectRoot = getProjectRoot(file, config);
+let projectRoot;
 
-  if (!webpackConfig) {
-    webpackConfig = getWebpackConfig(source, projectRoot, config);
-  }
+exports.resolve = function resolveKibanaPath(source, file, config) {
+  projectRoot = projectRoot || getProjectRoot(file, config);
+  webpackConfig = webpackConfig || getWebpackConfig(source, projectRoot, config);
 
   return webpackResolver.resolve(source, file, {
     config: webpackConfig
   });
 };
+
+// use version 2 of the resolver interface, https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#interfaceversion--number
+exports.interfaceVersion = 2;
