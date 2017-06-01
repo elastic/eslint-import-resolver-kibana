@@ -2,9 +2,13 @@ const webpackResolver = require('eslint-import-resolver-webpack');
 const getProjectRoot = require('./lib/get_project_root');
 const getWebpackConfig = require('./lib/get_webpack_config');
 
+// cache expensive resolution results
+let projectRoot;
+let webpackConfig;
+
 exports.resolve = function resolveKibanaPath(source, file, config) {
-  const projectRoot = getProjectRoot(file, config);
-  const webpackConfig = getWebpackConfig(source, projectRoot, config);
+  projectRoot = projectRoot || getProjectRoot(file, config);
+  webpackConfig = webpackConfig || getWebpackConfig(source, projectRoot, config);
 
   return webpackResolver.resolve(source, file, {
     config: webpackConfig
