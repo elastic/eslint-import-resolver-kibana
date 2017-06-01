@@ -9,10 +9,7 @@ const debug = require('debug')('eslint-import-resolver-kibana');
 const defaults = {
   kibanaPath: '../kibana',
   pluginPaths: [],
-  pluginDirs: [
-    '../kibana/plugins',
-    '../kibana/core_plugins',
-  ]
+  pluginDirs: [],
 };
 
 /*
@@ -29,10 +26,16 @@ function getKibanaPath(config, rootPath) {
   return kibanaPath;
 }
 
-function getPlugins(config, projectRoot) {
+function getPlugins(config, kibanaPath, projectRoot) {
+  const pluginDirs = [
+    ...(config.pluginDirs || defaults.pluginDirs),
+    resolve(kibanaPath, 'plugins'),
+    resolve(kibanaPath, 'src', 'core_plugins'),
+  ];
+
   const globPatterns = [
-    ...(config.pluginDirs || defaults.pluginDirs).map(dir => `${dir}/*/package.json`),
-    ...(config.pluginPaths || defaults.pluginPaths).map(path => `${path}/package.json`)
+    ...pluginDirs.map(dir => `${dir}/*/package.json`),
+    ...(config.pluginPaths || defaults.pluginPaths).map(path => `${path}/package.json`),
   ];
   const globOptions = { cwd: projectRoot };
 
@@ -64,7 +67,7 @@ function getWebpackConfig(source, projectRoot, config) {
     test_utils: fromKibana('src/test_utils/public'),
   };
 
-  getPlugins(config, projectRoot).forEach(plugin => {
+  getPlugins(config, kibanaPath, projectRoot).forEach(plugin => {
     aliases[`plugins/${plugin.name}`] = plugin.publicDirectory;
   });
 
