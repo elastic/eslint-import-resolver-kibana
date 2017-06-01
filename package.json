@@ -1,6 +1,6 @@
 {
   "name": "@elastic/eslint-import-resolver-kibana",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Kibana eslint-plugin-import resolver for Kibana",
   "main": "index.js",
   "author": "Joe Fleming <github.com/w33ble>",
