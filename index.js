@@ -82,7 +82,7 @@ function getMatch(matches, checkPath) {
  */
 function resolvePluginsAliasImport(pluginsImport, kibanaPath, rootPath) {
   const { name: packageName } = require(path.resolve(rootPath, 'package.json'));
-  const [ pluginName, ...importPaths ] = pluginsImport[1].split('/');
+  const [ pluginName, ...importPaths ] = pluginsImport[1].split(path.sep);
   debug(`resolvePluginsAliasImport: package ${packageName}, plugin ${pluginName}, import ${importPaths.join('/')}`);
 
   if (packageName !== 'kibana' && packageName === pluginName) {
@@ -118,23 +118,34 @@ function resolveLocalRelativeImport(fileImport, file) {
  * @param {String} kibanaPath: path to Kibana, default or configured
  * @param {String} rootPath: root path of the project code
  */
-function resolveWebpackShim(source, kibanaPath, rootPath) {
-  const pluginShimPath = path.join(rootPath, 'webpackShims');
-  const pluginMatches = getFileMatches(source, pluginShimPath);
-  const pluginFileMatches = getMatch(pluginMatches, pluginShimPath);
-  debug(`resolveWebpackShim: checking for ${source}`);
-  if (pluginFileMatches.found) {
-    debug(`resolved webpackShim import in plugin: ${source}`);
-    return pluginFileMatches;
-  }
+function resolveWebpackShim(source, file, kibanaPath, rootPath) {
+  debug(`resolveWebpackShim: resolving ${source}`);
+  const sourceParts = source.split(path.sep);
+  const baseSource = sourceParts.pop();
+  const pathTree = path.relative(rootPath, path.dirname(file)).split(path.sep);
 
-  const kibanaShimPath = path.join(kibanaPath, 'webpackShims');
-  const kibanaMatches = getFileMatches(source, kibanaShimPath);
-  const kibanaFileMatches = getMatch(kibanaMatches, kibanaShimPath);
-  if (kibanaFileMatches.found) {
-    debug(`resolved webpackShim import in Kibana: ${source}`);
-  }
-  return kibanaFileMatches;
+  // check all paths from root to filedir for matching webpackShims path
+  const pluginShimPaths = pathTree.reduce((acc, branch) => {
+    acc.filepath.push(branch);
+    acc.paths.push(path.join(rootPath, ...acc.filepath, 'webpackShims', ...sourceParts));
+    return acc;
+  }, {
+    filepath: [],
+    paths: [ path.join(rootPath, 'webpackShims', ...sourceParts) ]
+  }).paths;
+
+  // add kibana webpackShims to the list of paths to try
+  pluginShimPaths.push(path.join(kibanaPath, 'webpackShims', ...sourceParts));
+
+  const pluginFileMatches = pluginShimPaths.reduce((acc, pluginShimPath) => {
+    if (acc.found) return acc; // stop checking once there's a match
+
+    const pluginMatches = getFileMatches(baseSource, pluginShimPath);
+    return getMatch(pluginMatches, pluginShimPath);
+  }, {});
+
+  if (pluginFileMatches.found) debug(`resolved webpackShim import in plugin: ${source}`);
+  return pluginFileMatches;
 }
 
 /*
@@ -207,7 +218,7 @@ exports.resolve = function resolveKibanaPath(source, file, config) {
   const aliasModuleImport = pathFix(resolveKibanaModuleImport(realSource, kibanaPath));
   if (aliasModuleImport.found) return aliasModuleImport;
 
-  return resolveWebpackShim(realSource, kibanaPath, rootPath);
+  return resolveWebpackShim(realSource, file, kibanaPath, rootPath);
 };
 
 // use version 2 of the resolver interface, https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md#interfaceversion--number
