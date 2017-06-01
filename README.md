@@ -33,7 +33,7 @@ See [the resolvers docs](https://github.com/benmosher/eslint-plugin-import#resol
 Property | Default | Descritpion
 -------- | ------- | -----------
 kibanaPath | `../kibana` | Relative path to the kibana root
-pluginName | | The `name` property in the plugin's `package.json` file, required when your plugin has multiple plugins with their own`package.json` files
+rootPackageName | | The `name` property in the root `package.json` file, required when your plugin has multiple plugins with their own`package.json` files
 pluginDirs | `[]` | Array of additional directories to check for Kibana plugins
 pluginPaths | `[]` | Array of additional paths to look in when resolving plugin dependencies
 
