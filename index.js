@@ -7,8 +7,10 @@ let projectRoot;
 let webpackConfig;
 
 exports.resolve = function resolveKibanaPath(source, file, config) {
-  projectRoot = projectRoot || getProjectRoot(file, config);
-  webpackConfig = webpackConfig || getWebpackConfig(source, projectRoot, config);
+  const settings = config || {};
+
+  projectRoot = projectRoot || getProjectRoot(file, settings);
+  webpackConfig = webpackConfig || getWebpackConfig(source, projectRoot, settings);
 
   return webpackResolver.resolve(source, file, {
     config: webpackConfig
