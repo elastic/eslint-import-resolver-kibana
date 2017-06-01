@@ -36,3 +36,9 @@ kibanaPath | `../kibana` | Relative path to the kibana root
 pluginName | | The `name` property in the plugin's `package.json` file, required when your plugin has multiple plugins with their own`package.json` files
 pluginDirs | `[]` | Array of additional directories to check for Kibana plugins
 pluginPaths | `[]` | Array of additional paths to look in when resolving plugin dependencies
+
+## Debugging
+
+For debugging output from this resolver, run your linter with `DEBUG=eslint-plugin-import:resolver:kibana`.
+
+This resolver makes heavy use of *eslint-import-resolver-webpack*, and you can get debugging output from both resolver by using `DEBUG=eslint-plugin-import:resolver:*`.
