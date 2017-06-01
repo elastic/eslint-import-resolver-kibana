@@ -1,5 +1,5 @@
 const { dirname, resolve } = require('path');
-const findRoot = require('find-root');
+const pkgUp = require('pkg-up');
 const glob = require('glob-all');
 const webpackResolver = require('eslint-import-resolver-webpack');
 const webpack = require('webpack');
@@ -24,6 +24,11 @@ function getKibanaPath(config, rootPath) {
 
   debug(`resolved kibana path: ${kibanaPath}`);
   return kibanaPath;
+}
+
+function getProjectRoot(file, config) {
+  const pkgFile = pkgUp.sync(dirname(file));
+  return dirname(pkgFile);
 }
 
 function getPlugins(config, kibanaPath, projectRoot) {
@@ -99,8 +104,10 @@ exports.interfaceVersion = 2;
 
 let webpackConfig;
 exports.resolve = function resolveKibanaPath(source, file, config) {
+  const projectRoot = getProjectRoot(file, config);
+
   if (!webpackConfig) {
-    webpackConfig = getWebpackConfig(source, findRoot(file), config);
+    webpackConfig = getWebpackConfig(source, projectRoot, config);
   }
 
   return webpackResolver.resolve(source, file, {
