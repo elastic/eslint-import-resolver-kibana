@@ -21,7 +21,7 @@ Property | Default | Descritpion
 rootPackageName | `null` | The `"name"` property of the root `package.json` file
 kibanaPath | `../kibana` | Relative path to the kibana root
 pluginDirs | `[]` | Array of relative paths pointing to directories which contain Kibana plugins
-pluginPaths | `[]` | Array of relative paths which contain a Kibana plugin
+pluginPaths | `[]` if `rootPackageName` is set, otherwise `[.]` | Array of relative paths which contain a Kibana plugin
 
 ## Setting Usages
 To specify additional config add a `:` after the resolver name and specify the argument as key-value pairs:
