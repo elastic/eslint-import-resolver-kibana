@@ -4,7 +4,7 @@ Resolver for Kibana imports, meant to be used with [eslint-plugin-import](https:
 
 ## Usage
 
-Specify this resolver at `settings["import/resolver']` in your eslint config file:
+Specify this resolver with the `import/resolver` setting in your eslint config file:
 
 ```yml
 # .eslintrc.yml
@@ -14,14 +14,14 @@ settings:
 
 ## Settings
 
-> NOTE: all relative paths are resolved as relative to the project root, which is determined by walking up from the first linted file and looking for a `package.json` file. If you project has multiple `package.json` files then make sure to specify the `rootPackageName` setting.
+***NOTE:*** All relative paths are resolved as relative to the project root, which is determined by walking up from the first linted file and looking for a `package.json` file. If your project has multiple `package.json` files then make sure to specify the `rootPackageName` setting.
 
-Property | Default | Descritpion
+Property | Default | Description
 -------- | ------- | -----------
-rootPackageName | `null` | The `"name"` property of the root `package.json` file
+rootPackageName | `null` | The `"name"` property of the root `package.json` file. If your project has multiple `package.json` files then specify this setting to tell the resolver which `package.json` file sits at the root of your project.
 kibanaPath | `../kibana` | Relative path to the kibana root
-pluginDirs | `[]` | Array of relative paths pointing to directories which contain Kibana plugins
-pluginPaths | `[]` if `rootPackageName` is set, otherwise `[.]` | Array of relative paths which contain a Kibana plugin
+pluginPaths | `[]` if `rootPackageName` is set, otherwise `[.]` | Array of relative paths which contain a Kibana plugin. Plugins must contain a `package.json` file to be valid.
+pluginDirs | `[]` | Array of relative paths pointing to directories which contain Kibana plugins. Plugins must contain a `package.json` file to be valid.
 
 ## Setting Usages
 To specify additional config add a `:` after the resolver name and specify the argument as key-value pairs:
