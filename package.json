@@ -13,12 +13,11 @@
     "url": "git+https://github.com/elastic/eslint-import-resolver-kibana.git"
   },
   "dependencies": {
-    "@elastic/webpack-directory-name-as-main": "^2.0.3",
     "debug": "^2.6.6",
     "eslint-import-resolver-node": "^0.3.0",
     "eslint-import-resolver-webpack": "^0.8.1",
     "glob-all": "^3.1.0",
-    "webpack": "github:elastic/webpack#fix/query-params-for-aliased-loaders"
+    "webpack": "3.6.0"
   },
   "devDependencies": {
     "eslint": "^3.19.0",
