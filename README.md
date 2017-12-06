@@ -19,7 +19,6 @@ settings:
 Property | Default | Description
 -------- | ------- | -----------
 rootPackageName | `null` | The `"name"` property of the root `package.json` file. If your project has multiple `package.json` files then specify this setting to tell the resolver which `package.json` file sits at the root of your project.
-kibanaPath | `../kibana` | Relative path to the kibana root
 pluginPaths | `[]` if `rootPackageName` is set, otherwise `[.]` | Array of relative paths which contain a Kibana plugin. Plugins must contain a `package.json` file to be valid.
 pluginDirs | `[]` | Array of relative paths pointing to directories which contain Kibana plugins. Plugins must contain a `package.json` file to be valid.
 
@@ -31,9 +30,6 @@ To specify additional config add a `:` after the resolver name and specify the a
 settings:
   import/resolver:
     "@elastic/eslint-import-resolver-kibana":
-      # if you use a non-standard kibana path
-      kibanaPath: ../../some/relative/path/to/kibana
-      
       # if your project has multiple package.json files
       rootPackageName: my-project
       
