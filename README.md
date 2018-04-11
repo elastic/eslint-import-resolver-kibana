@@ -2,7 +2,7 @@
 
 ## DEPRECATED
 
-Kibana now maintains this utility from [the Kibana repo](https://github.com/elastic/kibana/tree/master/packages/kbn-eslint-import-resolver-kibana). You should use these if you are targeting Kibana 6.3+. See https://github.com/elastic/kibana/tree/master/packages/kbn-eslint-import-resolver-kibana for installation info.
+Kibana now maintains this utility from [the Kibana repo](https://github.com/elastic/kibana/tree/master/packages/kbn-eslint-import-resolver-kibana). You should that version if you are targeting Kibana 6.3+. See https://github.com/elastic/kibana/tree/master/packages/kbn-eslint-import-resolver-kibana for installation info.
 
 Resolver for Kibana imports, meant to be used with [eslint-plugin-import](https://github.com/benmosher/eslint-plugin-import).
 
